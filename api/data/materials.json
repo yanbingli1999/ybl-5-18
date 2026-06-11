@@ -1,0 +1,32 @@
+[
+  {
+    "id": "copper",
+    "name": "铜",
+    "diffusionCoefficient": 117e-6,
+    "description": "优良导热金属，常用于散热片"
+  },
+  {
+    "id": "aluminum",
+    "name": "铝",
+    "diffusionCoefficient": 97e-6,
+    "description": "轻质高导热材料"
+  },
+  {
+    "id": "steel",
+    "name": "钢",
+    "diffusionCoefficient": 14e-6,
+    "description": "结构用钢，导热中等"
+  },
+  {
+    "id": "glass",
+    "name": "玻璃",
+    "diffusionCoefficient": 0.34e-6,
+    "description": "绝热材料，导热缓慢"
+  },
+  {
+    "id": "wood",
+    "name": "木材",
+    "diffusionCoefficient": 0.08e-6,
+    "description": "良好的绝热材料"
+  }
+]
