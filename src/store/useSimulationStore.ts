@@ -38,6 +38,9 @@ interface SimulationState {
   currentExperimentId: string | null;
   hoveredCell: { x: number; y: number } | null;
   
+  timelineViewStart: number;
+  timelineViewEnd: number;
+  
   setMode: (mode: SimulationMode) => void;
   setCurrentStep: (step: number) => void;
   setCurrentTemperature: (temp: number[][]) => void;
@@ -68,6 +71,9 @@ interface SimulationState {
   setFavorites: (favorites: ExperimentResult[]) => void;
   setCurrentExperimentId: (id: string | null) => void;
   setHoveredCell: (cell: { x: number; y: number } | null) => void;
+  
+  setTimelineView: (start: number, end: number) => void;
+  resetTimelineView: () => void;
   
   reset: () => void;
 }
@@ -122,22 +128,41 @@ export const useSimulationStore = create<SimulationState>((set, get) => ({
   currentExperimentId: null,
   hoveredCell: null,
   
+  timelineViewStart: 0,
+  timelineViewEnd: 500,
+  
   setMode: (mode) => set({ mode }),
-  setCurrentStep: (step) => set({ currentStep: step }),
+  setCurrentStep: (step) => {
+    const state = get();
+    const clampedStep = Math.max(0, Math.min(step, state.totalSteps));
+    set({ currentStep: clampedStep });
+  },
   setCurrentTemperature: (temp) => set({ currentTemperature: temp }),
   addTemperatureToHistory: (temp) =>
     set((state) => ({
       temperatureHistory: [...state.temperatureHistory, temp],
     })),
-  clearHistory: () => set({ temperatureHistory: [], currentStep: 0 }),
+  clearHistory: () => {
+    const state = get();
+    set({
+      temperatureHistory: [],
+      currentStep: 0,
+      timelineViewStart: 0,
+      timelineViewEnd: state.totalSteps,
+    });
+  },
   
-  setGrid: (grid) =>
+  setGrid: (grid) => {
+    const state = get();
     set({
       grid,
       currentTemperature: createEmptyTemperature(grid),
       temperatureHistory: [],
       currentStep: 0,
-    }),
+      timelineViewStart: 0,
+      timelineViewEnd: state.totalSteps,
+    });
+  },
   setBoundaryConditions: (bc) => set({ boundaryConditions: bc }),
   setMaterialId: (id) => {
     const material = get().materials.find(m => m.id === id);
@@ -160,7 +185,7 @@ export const useSimulationStore = create<SimulationState>((set, get) => ({
       initialHeatSources: state.initialHeatSources.filter((_, i) => i !== index),
     })),
   clearHeatSources: () => set({ initialHeatSources: [] }),
-  setTotalSteps: (steps) => set({ totalSteps: steps }),
+  setTotalSteps: (steps) => set({ totalSteps: steps, timelineViewStart: 0, timelineViewEnd: steps }),
   setTimeStep: (dt) => set({ timeStep: dt }),
   setPlaybackSpeed: (speed) => set({ playbackSpeed: speed }),
   setBrushSize: (size) => set({ brushSize: size }),
@@ -179,8 +204,26 @@ export const useSimulationStore = create<SimulationState>((set, get) => ({
     })),
   setExperiments: (experiments) => set({ experiments }),
   setFavorites: (favorites) => set({ favorites }),
-  setCurrentExperimentId: (id) => set({ currentExperimentId: id }),
+  setCurrentExperimentId: (id) => {
+    const state = get();
+    set({
+      currentExperimentId: id,
+      timelineViewStart: 0,
+      timelineViewEnd: state.totalSteps,
+    });
+  },
   setHoveredCell: (cell) => set({ hoveredCell: cell }),
+  
+  setTimelineView: (start, end) => {
+    const state = get();
+    const clampedStart = Math.max(0, Math.min(start, state.totalSteps));
+    const clampedEnd = Math.max(clampedStart + 1, Math.min(end, state.totalSteps));
+    set({ timelineViewStart: clampedStart, timelineViewEnd: clampedEnd });
+  },
+  resetTimelineView: () => {
+    const state = get();
+    set({ timelineViewStart: 0, timelineViewEnd: state.totalSteps });
+  },
   
   reset: () =>
     set((state) => ({
@@ -188,6 +231,8 @@ export const useSimulationStore = create<SimulationState>((set, get) => ({
       currentStep: 0,
       currentTemperature: createEmptyTemperature(state.grid),
       temperatureHistory: [],
+      timelineViewStart: 0,
+      timelineViewEnd: state.totalSteps,
     })),
 }));
 
